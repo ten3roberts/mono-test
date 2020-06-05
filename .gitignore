@@ -1,0 +1,6 @@
+*.exe
+obj/
+bin/
+Makefile
+*.make
+.vscode/
