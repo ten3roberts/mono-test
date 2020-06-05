@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdbool.h>
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/debug-helpers.h>
+
+#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
 
 static MonoString *sample()
 {
@@ -17,24 +19,24 @@ static void *log_call(MonoString *msg)
 	return NULL;
 }
 
-MonoObject* cs_object_create(MonoDomain* domain, MonoImage* assembly_image, const char* name)
+MonoObject *cs_object_create(MonoDomain *domain, MonoImage *assembly_image, const char *name)
 {
-		MonoClass *class = mono_class_from_name(assembly_image, "", "Script");
-		if (class == NULL)
-		{
-			printf("Unable to find class\n");
-		}
+	MonoClass *class = mono_class_from_name(assembly_image, "", "Script");
+	if (class == NULL)
+	{
+		printf("Unable to find class\n");
+	}
 
-		// Create the instance
-		MonoObject *object = mono_object_new(domain, class);
-		mono_runtime_object_init(object);
-		return object;
+	// Create the instance
+	MonoObject *object = mono_object_new(domain, class);
+	mono_runtime_object_init(object);
+	return object;
 }
 
-MonoObject* cs_object_invoke(MonoObject* object, const char* name, int param_count, void** params)
+MonoObject *cs_object_invoke(MonoObject *object, const char *name, int param_count, void **params)
 {
-	MonoClass* class = mono_object_get_class(object);
-	MonoMethod* method = mono_class_get_method_from_name(class, name, param_count);
+	MonoClass *class = mono_object_get_class(object);
+	MonoMethod *method = mono_class_get_method_from_name(class, name, param_count);
 	return mono_runtime_invoke(method, object, params, NULL);
 }
 
@@ -46,8 +48,6 @@ int main(int argc, char **argv)
 	const char *assembly_filename = argv[1];
 
 	printf("Initializing mono\n");
-
-	//mono_config_parse(NULL);
 
 	domain = mono_jit_init("myapp");
 
@@ -65,12 +65,20 @@ int main(int argc, char **argv)
 	mono_jit_exec(domain, assembly, argc - 1, argv + 1);
 	MonoImage *assembly_image = mono_assembly_get_image(assembly);
 
-	MonoObject* script = cs_object_create(domain, assembly_image, "Script");
-	void* params[1];
-	int frame = 1;
-	params[0] = &frame;
-	cs_object_invoke(script, "Update", 1, params);
+	MonoObject *script = cs_object_create(domain, assembly_image, "Script");
 
+	int frame = 1;
+	while (true)
+	{
+		void *params[1];
+		params[0] = &frame;
+
+		MonoObject* ret = cs_object_invoke(script, "Update", 1, params);
+		int a = *(int*)mono_object_unbox(ret);
+		printf("Script returned %d\n", a);
+		usleep(100000);
+		frame++;
+	}
 	/*// Execute Update()
 	{
 		MonoMethodDesc *mono_method_desc = mono_method_desc_new("Application:Update", false);
@@ -86,7 +94,6 @@ int main(int argc, char **argv)
 	}*/
 	// Create an object
 	{
-
 	}
 
 exit:

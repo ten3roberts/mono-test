@@ -16,9 +16,11 @@ class Script
 		Application.Log("Created script with name: " + name);
 	}
 
-	public void Update(int frame)
+	public int Update(int frame)
 	{
 		Application.Log("Updating script '" + name + "' with frame: " + frame);
+
+		return frame * 2;
 	}
 
 }
