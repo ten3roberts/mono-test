@@ -17,6 +17,28 @@ static void *log_call(MonoString *msg)
 	return NULL;
 }
 
+MonoObject* object_create(const char* name)
+{
+		MonoClass *class = mono_class_from_name(mono_image, "", "Script");
+		if (class == NULL)
+		{
+			printf("Unable to find class\n");
+		}
+
+		// Create the instance
+		MonoObject *instance = mono_object_new(domain, class);
+		mono_runtime_object_init(instance);
+
+		// Invoke string constructor
+		MonoMethodDesc *desc = mono_method_desc_new("Script:Update", false);
+		MonoMethod *method = mono_method_desc_search_in_class(desc, class);
+
+		void *args[1];
+		int frame = 5;
+		args[0] = &frame;
+		mono_runtime_invoke(method, instance, args, NULL);
+}
+
 int main(int argc, char **argv)
 {
 	// Initialize mono
@@ -25,6 +47,8 @@ int main(int argc, char **argv)
 	const char *assembly_filename = argv[1];
 
 	printf("Initializing mono\n");
+
+	mono_config_parse(NULL);
 
 	domain = mono_jit_init("myapp");
 
@@ -57,24 +81,7 @@ int main(int argc, char **argv)
 	}*/
 	// Create an object
 	{
-		MonoClass *class = mono_class_from_name(mono_image, "", "Script");
-		if (class == NULL)
-		{
-			printf("Unable to find class\n");
-		}
 
-		// Create the instance
-		MonoObject *instance = mono_object_new(domain, class);
-		mono_runtime_object_init(instance);
-
-		// Invoke string constructor
-		MonoMethodDesc *desc = mono_method_desc_new("Script:Update", false);
-		MonoMethod *method = mono_method_desc_search_in_class(desc, class);
-
-		void *args[1];
-		int frame = 5;
-		args[0] = &frame;
-		mono_runtime_invoke(method, instance, args, NULL);
 	}
 
 exit:
