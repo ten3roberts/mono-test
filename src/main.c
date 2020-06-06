@@ -40,6 +40,11 @@ MonoObject *cs_object_invoke(MonoObject *object, const char *name, int param_cou
 	return mono_runtime_invoke(method, object, params, NULL);
 }
 
+struct vec3
+{
+	float x, y, z;
+};
+
 int main(int argc, char **argv)
 {
 	// Initialize mono
@@ -73,9 +78,14 @@ int main(int argc, char **argv)
 		void *params[1];
 		params[0] = &frame;
 
-		MonoObject* ret = cs_object_invoke(script, "Update", 1, params);
-		int a = *(int*)mono_object_unbox(ret);
-		printf("Script returned %d\n", a);
+		//MonoClassField* field = mono_class_get_field(mono_object_get_class(script), );
+		//MonoObject* position = mono_field_get_value_object(domain, field, script);
+
+		MonoObject *ret = cs_object_invoke(script, "Update", 1, params);
+
+		struct vec3* v = (struct vec3 *)mono_object_unbox(ret);
+		printf("Script returned vec3(%f, %f, %f)\n", v->x, v->y, v->z);
+		v->z -= 0.05f;
 		usleep(100000);
 		frame++;
 	}
